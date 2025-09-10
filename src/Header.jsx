@@ -12,7 +12,7 @@ return (
         <div>
             <p>Welcome to the Dog Weight Scaler App!</p>
         </div>
-        <hr/>
+        <hr />
     </header>
 )
 }
