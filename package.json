@@ -1,0 +1,20 @@
+{
+  "name": "project-name-here-capstone",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/DarrylClay2005/Project-Name-Here-Capstone#readme",
+  "bugs": {
+    "url": "https://github.com/DarrylClay2005/Project-Name-Here-Capstone/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DarrylClay2005/Project-Name-Here-Capstone.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
