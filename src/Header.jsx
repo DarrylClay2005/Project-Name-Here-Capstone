@@ -9,6 +9,9 @@ return (
                 <li><a href="#">Contact</a></li>
             </ul>
         </nav>
+        <div>
+            <p>Welcome to the Dog Weight Scaler App!</p>
+        </div>
     </header>
 )
 }
