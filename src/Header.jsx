@@ -3,7 +3,7 @@ return (
     <header>
         <h1>Fish Breed Finder</h1>
         <div>
-            <p>Welcome to the Dog Weight Scaler App!</p>
+            <p>Welcome to the Fish Breed Finder App!</p>
         </div>
         <nav>
             <ul>
