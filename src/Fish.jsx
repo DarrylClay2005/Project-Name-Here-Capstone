@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { identifyFish } from './fishialApi';
 
 const FishBreedFinder = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFish, setSelectedFish] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [aiResults, setAiResults] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Fish database
   const fishData = {
@@ -132,6 +138,69 @@ const FishBreedFinder = () => {
     e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMDAgMTAwQzIyMCAxMDAgMjQwIDEyMCAyNDAgMTQwQzI0MCAx2MCAyMjAgMTgwIDIwMCAxODBDMTgwIDE4MCAxNjAgMTYwIDE2MmQt0MEN2NjAgMTIwIDE4MnExMDAgMjAwIDEwMFoiIGZpbGw9IiM5Q0E5QjAiLz4KICA8Y2lyY2xlIGN4PSIxODUiIGN5PSIxMjUiIHI9IjMiIGZpbGw9IiM2QjczODAiLz4KICA8dGV4dCB4PSIyMDAiIHk9IjIyMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzZCNzM4MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0cHgiPkZpc2ggSW1hZ2U8L3RleHQ+Cjwvc3ZnPg==';
   };
 
+  // Handle file selection for AI identification
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSelectedFish({
+          name: 'Uploaded Image',
+          image: e.target.result,
+          description: 'Click "Identify with AI" to analyze this fish image.'
+        });
+      };
+      reader.readAsDataURL(file);
+      setSearchTerm('');
+      setAiResults(null);
+    }
+  };
+
+  // Trigger file input
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  // AI Fish Identification
+  const handleAiIdentification = async () => {
+    if (!selectedImage) {
+      alert('Please select an image first!');
+      return;
+    }
+
+    setIsLoading(true);
+    setAiResults(null);
+    
+    try {
+      const results = await identifyFish(selectedImage, (message) => {
+        setLoadingMessage(message);
+      });
+      
+      setAiResults(results);
+      
+      // If fish were found, display the first result
+      if (results.results && results.results.length > 0) {
+        const firstFish = results.results[0];
+        const topSpecies = firstFish.species[0]; // Get the highest accuracy species
+        
+        setSelectedFish({
+          name: topSpecies.name,
+          image: URL.createObjectURL(selectedImage),
+          description: `AI Identification: ${topSpecies.name} with ${(topSpecies.accuracy * 100).toFixed(1)}% confidence.`,
+          aiData: firstFish
+        });
+      }
+    } catch (error) {
+      console.error('AI identification failed:', error);
+      alert(`AI identification failed: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+      setLoadingMessage('');
+    }
+  };
+
   return (
     <div className="fish-finder-container" style={{
       maxWidth: '800px',
@@ -201,7 +270,7 @@ const FishBreedFinder = () => {
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
             type="submit"
             style={{
@@ -232,7 +301,66 @@ const FishBreedFinder = () => {
           >
             Random Fish
           </button>
+
+          <button
+            type="button"
+            onClick={triggerFileInput}
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              backgroundColor: '#9b59b6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+          >
+            📸 Upload Image
+          </button>
+
+          {selectedImage && (
+            <button
+              type="button"
+              onClick={handleAiIdentification}
+              disabled={isLoading}
+              style={{
+                padding: '12px 24px',
+                fontSize: '16px',
+                backgroundColor: isLoading ? '#95a5a6' : '#27ae60',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: isLoading ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {isLoading ? '🔍 Analyzing...' : '🤖 Identify with AI'}
+            </button>
+          )}
         </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          style={{ display: 'none' }}
+        />
+
+        {/* Loading indicator */}
+        {isLoading && (
+          <div style={{
+            textAlign: 'center',
+            marginTop: '20px',
+            padding: '20px',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '8px',
+            border: '2px solid #3498db'
+          }}>
+            <div style={{ marginBottom: '10px' }}>🔍 AI Analysis in Progress...</div>
+            <div style={{ color: '#666', fontSize: '14px' }}>{loadingMessage}</div>
+          </div>
+        )}
       </form>
 
       {/* Results */}
@@ -279,6 +407,43 @@ const FishBreedFinder = () => {
               }}>
                 {selectedFish.description}
               </p>
+
+              {/* AI Results Display */}
+              {selectedFish.aiData && aiResults && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3 style={{ color: '#2c3e50', marginBottom: '10px' }}>AI Analysis Results:</h3>
+                  {aiResults.results.map((fish, fishIndex) => (
+                    <div key={fishIndex} style={{
+                      marginBottom: '15px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #dee2e6'
+                    }}>
+                      <h4 style={{ margin: '0 0 10px 0', color: '#495057' }}>Fish #{fishIndex + 1} Detected:</h4>
+                      {fish.species.slice(0, 3).map((species, index) => (
+                        <div key={index} style={{
+                          padding: '8px',
+                          marginBottom: '5px',
+                          backgroundColor: index === 0 ? '#d4edda' : '#fff',
+                          borderRadius: '4px',
+                          border: index === 0 ? '1px solid #c3e6cb' : '1px solid #e9ecef'
+                        }}>
+                          <strong>{species.name}</strong>
+                          <span style={{
+                            marginLeft: '10px',
+                            color: index === 0 ? '#155724' : '#666',
+                            fontSize: '14px'
+                          }}>
+                            Confidence: {(species.accuracy * 100).toFixed(1)}%
+                            {index === 0 && ' (Best Match)'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -305,8 +470,9 @@ const FishBreedFinder = () => {
           color: '#6c757d'
         }}>
           <h3>Welcome to Fish Breed Finder!</h3>
-          <p>Enter a fish name in the search box above to learn more about different fish breeds.</p>
-          <p>Available fish: Goldfish, Betta, Guppy, Angelfish, Neon Tetra, Clownfish, Oscar, Discus, Molly, Platy</p>
+          <p>🔍 Search our database by entering a fish name, or 🤖 upload an image for AI-powered fish identification!</p>
+          <p><strong>Search Database:</strong> Goldfish, Betta, Guppy, Angelfish, Neon Tetra, Clownfish, Oscar, Discus, Molly, Platy</p>
+          <p><strong>AI Identification:</strong> Upload any fish image and let our AI identify the species from 640+ possible fish species worldwide!</p>
         </div>
       )}
     </div>
