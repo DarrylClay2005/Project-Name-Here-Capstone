@@ -1,7 +1,7 @@
 function Header(){
 return (
     <header>
-        <h1>Dog Weight Scaler</h1>
+        <h1>Fish Breed Finder</h1>
         <div>
             <p>Welcome to the Dog Weight Scaler App!</p>
         </div>
