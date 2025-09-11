@@ -1,0 +1,1 @@
+@tailwind base;@tailwind components;@tailwind utilities;.card{@apply border border-gray-600 rounded-lg shadow-lg p-6 m-4 text-center max-w-xs inline-block;}.card .card-image{@apply w-3/5 h-auto rounded-full mb-4;}.card .card-description{@apply font-sans text-sm text-gray-700 mt-2;}
